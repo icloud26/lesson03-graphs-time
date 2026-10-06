@@ -23,14 +23,10 @@ st.write(
 # --------------------------------------------------
 # 데이터 불러오기
 # --------------------------------------------------
-DATA_URL = (
-    "https://raw.githubusercontent.com/"
-    "greatsong/modudata/main/data/kobis_daily.csv"
-)
-
 @st.cache_data
 def load_data():
-    df = pd.read_csv(DATA_URL)
+    # GitHub 저장소에 올린 CSV 파일 불러오기
+    df = pd.read_csv("kobis_daily.csv")
 
     # 날짜를 실제 날짜 형식으로 변환
     df["날짜"] = pd.to_datetime(
@@ -38,11 +34,20 @@ def load_data():
         format="%Y%m%d"
     )
 
-    # 관객 수를 숫자로 변환
-    df["일관객"] = pd.to_numeric(
-        df["일관객"],
-        errors="coerce"
-    )
+    # 숫자로 사용할 열 변환
+    number_columns = [
+        "순위",
+        "일관객",
+        "누적관객",
+        "스크린수",
+        "상영횟수"
+    ]
+
+    for col in number_columns:
+        df[col] = pd.to_numeric(
+            df[col],
+            errors="coerce"
+        )
 
     return df
 
@@ -51,25 +56,33 @@ df = load_data()
 
 
 # ==================================================
-# 1구역 : 영화별 일관객 변화
+# 1구역 : 영화별 날짜별 일관객 변화
 # ==================================================
 st.divider()
 
-st.header("1. 영화별 일관객 변화")
+st.header("1. 영화별 날짜별 일관객 변화")
 
 st.write(
     "영화를 선택하면 날짜에 따라 하루 관객 수가 "
     "어떻게 변했는지 확인할 수 있습니다."
 )
 
-movie_list = sorted(df["영화명"].dropna().unique())
+
+# 영화 목록 만들기
+movie_list = sorted(
+    df["영화명"].dropna().unique()
+)
 
 selected_movie = st.selectbox(
     "영화를 선택하세요",
     movie_list
 )
 
-movie_df = df[df["영화명"] == selected_movie].copy()
+
+# 선택한 영화만 가져오기
+movie_df = df[
+    df["영화명"] == selected_movie
+].copy()
 
 movie_df = movie_df.sort_values("날짜")
 
@@ -85,6 +98,7 @@ fig = px.line(
     title=f"{selected_movie}의 날짜별 일관객 변화"
 )
 
+# 마우스를 올렸을 때 날짜와 관객 수 표시
 fig.update_traces(
     hovertemplate=(
         "날짜: %{x|%Y-%m-%d}<br>"
@@ -106,7 +120,7 @@ st.plotly_chart(
 
 
 # --------------------------------------------------
-# 그래프 해석 자리
+# 그래프 해석
 # --------------------------------------------------
 st.markdown("#### 💡 이 그래프로 알 수 있는 것")
 
@@ -116,7 +130,7 @@ st.info(
 
 
 # ==================================================
-# 다음 그래프 구역
+# 2구역 : 다음 그래프를 추가할 자리
 # ==================================================
 st.divider()
 
