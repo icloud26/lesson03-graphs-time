@@ -25,7 +25,6 @@ st.write(
 # --------------------------------------------------
 @st.cache_data
 def load_data():
-    # GitHub 저장소에 올린 CSV 파일 불러오기
     df = pd.read_csv("kobis_daily.csv")
 
     # 날짜를 실제 날짜 형식으로 변환
@@ -67,8 +66,6 @@ st.write(
     "어떻게 변했는지 확인할 수 있습니다."
 )
 
-
-# 영화 목록 만들기
 movie_list = sorted(
     df["영화명"].dropna().unique()
 )
@@ -78,8 +75,6 @@ selected_movie = st.selectbox(
     movie_list
 )
 
-
-# 선택한 영화만 가져오기
 movie_df = df[
     df["영화명"] == selected_movie
 ].copy()
@@ -88,9 +83,9 @@ movie_df = movie_df.sort_values("날짜")
 
 
 # --------------------------------------------------
-# 선 그래프
+# 1번 선 그래프
 # --------------------------------------------------
-fig = px.line(
+fig1 = px.line(
     movie_df,
     x="날짜",
     y="일관객",
@@ -98,8 +93,7 @@ fig = px.line(
     title=f"{selected_movie}의 날짜별 일관객 변화"
 )
 
-# 마우스를 올렸을 때 날짜와 관객 수 표시
-fig.update_traces(
+fig1.update_traces(
     hovertemplate=(
         "날짜: %{x|%Y-%m-%d}<br>"
         "관객 수: %{y:,.0f}명"
@@ -107,15 +101,95 @@ fig.update_traces(
     )
 )
 
-fig.update_layout(
+fig1.update_layout(
     xaxis_title="날짜",
     yaxis_title="일관객 수",
     hovermode="x unified"
 )
 
 st.plotly_chart(
-    fig,
+    fig1,
     use_container_width=True
+)
+
+st.markdown("#### 💡 이 그래프로 알 수 있는 것")
+
+st.info(
+    "여기에 그래프를 보고 알 수 있는 특징을 한 문장으로 작성합니다."
+)
+
+
+# ==================================================
+# 2구역 : 일관객 합계 상위 5편 비교
+# ==================================================
+st.divider()
+
+st.header("2. 일관객 합계 상위 5편의 관객 변화")
+
+st.write(
+    "이 기간 동안 일관객 수의 합계가 가장 큰 영화 5편을 골라 "
+    "날짜별 관객 변화를 비교합니다."
+)
+
+
+# --------------------------------------------------
+# 영화별 일관객 합계 계산
+# --------------------------------------------------
+movie_totals = (
+    df.groupby("영화명", as_index=False)["일관객"]
+    .sum()
+    .sort_values("일관객", ascending=False)
+)
+
+top5_movies = movie_totals.head(5)["영화명"].tolist()
+
+
+# 상위 5편의 데이터만 선택
+top5_df = df[
+    df["영화명"].isin(top5_movies)
+].copy()
+
+top5_df = top5_df.sort_values("날짜")
+
+
+# --------------------------------------------------
+# 2번 선 그래프
+# --------------------------------------------------
+fig2 = px.line(
+    top5_df,
+    x="날짜",
+    y="일관객",
+    color="영화명",
+    title="일관객 합계 상위 5편의 날짜별 관객 변화"
+)
+
+fig2.update_traces(
+    hovertemplate=(
+        "날짜: %{x|%Y-%m-%d}<br>"
+        "관객 수: %{y:,.0f}명"
+        "<extra></extra>"
+    )
+)
+
+fig2.update_layout(
+    xaxis_title="날짜",
+    yaxis_title="일관객 수",
+    legend_title="영화명",
+    hovermode="x unified"
+)
+
+st.plotly_chart(
+    fig2,
+    use_container_width=True
+)
+
+
+# --------------------------------------------------
+# 그래프 사용 안내
+# --------------------------------------------------
+st.caption(
+    "그래프 오른쪽의 영화명을 클릭하면 해당 영화의 선을 "
+    "끄거나 다시 켤 수 있습니다."
 )
 
 
@@ -125,16 +199,17 @@ st.plotly_chart(
 st.markdown("#### 💡 이 그래프로 알 수 있는 것")
 
 st.info(
-    "여기에 그래프를 보고 알 수 있는 특징을 한 문장으로 작성합니다."
+    "여기에 다섯 영화의 관객 변화에서 알 수 있는 특징을 "
+    "한 문장으로 작성합니다."
 )
 
 
 # ==================================================
-# 2구역 : 다음 그래프를 추가할 자리
+# 3구역 : 다음 그래프를 추가할 자리
 # ==================================================
 st.divider()
 
-st.header("2. 다음 그래프")
+st.header("3. 다음 그래프")
 
 st.write(
     "앞으로 새로운 그래프를 추가할 구역입니다."
